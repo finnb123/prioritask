@@ -1,4 +1,5 @@
 import tkinter as tk
+from task import Task
 
 def showAddTaskView():
     print("showing addtaskview")
