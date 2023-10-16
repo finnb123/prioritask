@@ -1,3 +1,5 @@
+from subtask import Subtask;
+
 class Task:
     def __init__(self, id, name, description="", workload=0, priority=0, subtasks = []):
         self.id = id
@@ -29,5 +31,5 @@ class Task:
     @priority.setter
     def priority(self, newPrio): self.priority = newPrio
 
-    def addSubtask(self, newSub:str):
+    def addSubtask(self, newSub:Subtask):
         self.subtasks.append(newSub)
