@@ -1,35 +1,37 @@
-from subtask import Subtask;
+from subtask import Subtask
 
 class Task:
-    def __init__(self, id, name, description="", workload=0, priority=0, subtasks = []):
-        self.id = id
-        self.name = name
-        self.description = description
-        self.workload = workload
-        self.priority = priority
-        self.subtasks = subtasks
+    def __init__(self, name, taskID=0, description="", workload=0, priority=0, subtasks=None):
+        self._taskID = taskID  # Use a different name for the attribute
+        self._name = name
+        self._description = description
+        self._workload = workload
+        self._priority = priority
+        self._subtasks = subtasks if subtasks is not None else []
 
     # Getters
     @property
-    def id(self): return self.id
+    def taskID(self): return self._taskID
     @property
-    def name(self): return self.name
+    def name(self): return self._name
     @property
-    def description(self): return self.description
+    def description(self): return self._description
     @property
-    def workload(self): return self.workload
+    def workload(self): return self._workload
     @property
-    def priority(self): return self.priority
+    def priority(self): return self._priority
     @property
-    def subtasks(self): return self.subtasks
+    def subtasks(self): return self._subtasks
 
     # Setters
     @name.setter
-    def name(self, newName): self.name = newName
+    def name(self, newName): self._name = newName
     @description.setter
-    def description(self, newDesc): self.description = newDesc
+    def description(self, newDesc): self._description = newDesc
     @priority.setter
-    def priority(self, newPrio): self.priority = newPrio
+    def priority(self, newPrio): self._priority = newPrio
+    @taskID.setter
+    def taskID(self, newID): self._taskID = newID
 
-    def addSubtask(self, newSub:Subtask):
-        self.subtasks.append(newSub)
+    def addSubtask(self, newSub: Subtask):
+        self._subtasks.append(newSub)
