@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import *
 from tkinter import simpledialog
-from task import Task
+from classes.task import Task
 import pickle
 import os
 
