@@ -1,53 +1,77 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import *
 from tkinter import simpledialog
 from task import Task
 import pickle
 import os
 
-def showAddTaskView():
-    print("showing addtaskview")
-    addTaskView.pack(fill="both", expand=True)
 
-def hideAddTaskView():
-    print("hiding addtaskview")
-    addTaskView.pack_forget()
-    loadMain()
-
-def plusPress():
-    print("+ Button Pressed")
-    showAddTaskView()
-
-def commitText():
-    print(nameField.get("1.0",'end-1c'))
-    if len(tasks)>0:
-        newID = tasks[-1].id()+1
-    else:
-        newID = 1
-    newTask = Task(name = nameField.get("1.0",'end-1c'), taskID=newID, description=descriptionField.get("1.0",'end-1c'), workload=workloadInt.get())
-    tasks.append(newTask)
-    with open("tasks.file", "wb") as taskFile:
-        pickle.dump(tasks, taskFile)
-    taskFile.close()
+def clearScreen():
+    for widget in root.winfo_children():
+        widget.destroy()
 
 def refresh():
-    root.delete(all)
+    clearScreen()
+    loadMain()
+
+def showAddTaskView():
+    clearScreen()
+    print("showing addtaskview")
+    addTaskView = Frame(root, bg="black")
+    testLabel = Label(addTaskView, text="Create a Task")
+    testLabel.pack()
+
+    nameField = Entry(addTaskView)
+    nameField.pack()
+    descriptionField = Entry(addTaskView)
+    descriptionField.pack()
+    workloadInt = Scale(addTaskView, from_=0, to=200, orient='horizontal')
+    workloadInt.pack()
+
+    commitButton = Button(addTaskView, text="Save Task", 
+        command=lambda: saveTask(nameField.get(), descriptionField.get(), workloadInt.get()))
+    commitButton.pack()
+
+    taskViewExit = Button(addTaskView, text="exit", command=refresh).pack()
+    addTaskView.pack(fill="both", expand=True)
+
+
+def saveTask(name, description, workload):
+    global tasks
+    print("Saving task")
+    print(name)
+    if len(tasks)>0:
+        newID = tasks[-1].taskID+1
+    else:
+        newID = 1
+    newTask = Task(name = name, taskID=newID, description=description, workload=workload)
+    tasks.append(newTask)
+    print(len(tasks))
+    with open("tasks.file", "wb") as taskFile:
+        pickle.dump(tasks, taskFile)
 
 def loadMain():
+    global tasks
     if os.path.exists("tasks.file"):
         with open("tasks.file", "rb") as taskFile:
             tasks = pickle.load(taskFile)
     else:
         tasks = []
-    plusButton = tk.Button(root, text="+", command=plusPress).pack()
     for task in tasks:
-        taskNameLabel = tk.Label(root, text=task.name)
+        taskNameLabel = Label(root, text=task.name)
         taskNameLabel.pack()
+    print(len(tasks))
+    testLabel = Label(root, text=str(tasks)).pack()
+    plusButton = tk.Button(root, text="+", command=showAddTaskView).pack()
+
+
+
 ### --- SETUP --- ###
 root = tk.Tk()
 root.title("PrioriTask")
+root.configure(bg="light cyan")
 root.geometry("1280x720")
-tasks = []
+tasks=[]
 loadMain()
 
 
@@ -58,20 +82,7 @@ loadMain()
 
 
 ### --- ADD TASK VIEW --- ###
-addTaskView = tk.Frame(root, bg="black")
-testLabel = tk.Label(addTaskView, text="Create a Task")
-testLabel.pack()
 
-nameField = tk.Text(addTaskView, height=2, width=50)
-nameField.pack()
-descriptionField = tk.Text(addTaskView, height=3, width=50)
-descriptionField.pack()
-workloadInt = tk.Scale(addTaskView, from_=0, to=200, orient='horizontal')
-workloadInt.pack()
-
-commitButton = tk.Button(addTaskView, text="commit", command=commitText)
-commitButton.pack()
-taskViewExit = tk.Button(addTaskView, text="exit", command=hideAddTaskView).pack()
 
 
 ### --- MAIN --- ###
