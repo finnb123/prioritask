@@ -5,6 +5,7 @@ import pickle
 import os
 from classes.task import Task
 import datetime
+from funcs.computation import findPriority
 
 def clearScreen():
     for widget in root.winfo_children():
@@ -70,7 +71,7 @@ def saveTask(name, description, workload, dueDate):
         newID = tasks[-1].taskID + 1
     else:
         newID = 1
-    newTask = Task(name=name, taskID=newID, description=description, workload=workload)
+    newTask = Task(name=name, taskID=newID, description=description, workload=workload, dueDate=dueDate)
     tasks.append(newTask)
     print(len(tasks))
     with open("tasks.file", "wb") as taskFile:
@@ -84,6 +85,7 @@ def loadMain():
             tasks = pickle.load(taskFile)
     else:
         tasks = []
+    tasks = findPriority(tasks)
     for task in tasks:
         taskNameLabel = tk.Label(root, text=task.name, font=('roboto', 12, 'bold'), foreground='#121212')
         taskNameLabel.grid(column=2, row=tasks.index(task)+1)

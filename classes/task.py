@@ -24,7 +24,7 @@ class Task:
     @property
     def subtasks(self): return self._subtasks
     @property
-    def dueDate(self): return self.dueDate
+    def dueDate(self): return self._dueDate
 
     # Setters
     @name.setter
