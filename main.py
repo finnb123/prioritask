@@ -15,6 +15,20 @@ def refresh():
     clearScreen()
     loadMain()
 
+def draw_rounded_rectangle(canvas, x, y, width, height, corner_radius, **kwargs):
+    """
+    Draw a rounded rectangle on the canvas.
+    """
+    # Create rounded corners
+    canvas.create_arc(x, y, x + corner_radius * 2, y + corner_radius * 2, start=90, extent=90, fill=kwargs['fill'], outline="")
+    canvas.create_arc(x + width - corner_radius * 2, y, x + width, y + corner_radius * 2, start=0, extent=90, fill=kwargs['fill'], outline="")
+    canvas.create_arc(x, y + height - corner_radius * 2, x + corner_radius * 2, y + height, start=180, extent=90, fill=kwargs['fill'], outline="")
+    canvas.create_arc(x + width - corner_radius * 2, y + height - corner_radius * 2, x + width, y + height, start=270, extent=90, fill=kwargs['fill'], outline="")
+
+    # Create rectangle without outline
+    canvas.create_rectangle(x + corner_radius, y, x + width - corner_radius, y + height, fill=kwargs['fill'], outline="")
+    canvas.create_rectangle(x, y+corner_radius, x + width, y + height - corner_radius, fill=kwargs['fill'], outline="")
+    
 def showAddTaskView():
     clearScreen()
     print("showing addtaskview")
@@ -79,6 +93,8 @@ def saveTask(name, description, workload, dueDate):
     refresh()
 
 def loadMain():
+    titleLabel = tk.Label(root, text="PrioriTask", font=('roboto', 44, 'bold'), foreground='#BB86FC', borderwidth=0, background="#121212")
+    titleLabel.place(anchor="n", relx=0.5, rely=0.02)
     global tasks
     if os.path.exists("tasks.file"):
         with open("tasks.file", "rb") as taskFile:
@@ -86,21 +102,29 @@ def loadMain():
     else:
         tasks = []
     tasks = findPriority(tasks)
+    if len(tasks) >= 1:
+        subTitleLabel = tk.Label(root, text="Here's what you should be working on now:", font=('roboto', 16, 'bold'), foreground='#6200BE', borderwidth=0, background="#121212")
+        subTitleLabel.place(anchor="n", relx=0.5, rely=0.115)
     for task in tasks:
-        taskNameLabel = tk.Label(root, text=task.name, font=('roboto', 12, 'bold'), foreground='#121212')
-        taskNameLabel.grid(column=2, row=tasks.index(task)+1)
+        if tasks.index(task)<=3:
+            if tasks.index(task)==0: color="#6200EE"
+            else: color="#3700B3"
+            canvas = tk.Canvas(root, width=300, height=100, bg="#121212", highlightthickness=0)
+            canvas.place(anchor='n', relx = 0.5, rely = ((tasks.index(task)+1)/6)+0.01)
+            draw_rounded_rectangle(canvas, 0, 0, 300, 100, 20, fill=color)
     print(len(tasks))
 
     plusPicOriginal = Image.open('img/plusB.png')
-
     desired_size = (50, 50)
     resized_image = plusPicOriginal.resize(desired_size, Image.Resampling.LANCZOS)
-
     plusButtonPic = ImageTk.PhotoImage(resized_image)
-
     plusButton = tk.Button(root, image=plusButtonPic, command=showAddTaskView, bd=0, bg="#121212", activebackground="#121212")
     plusButton.image = plusButtonPic
-    plusButton.grid(column=4, row=len(tasks)+1)
+    plusButton.place(anchor='n', relx=0.5, rely=max(((len(tasks)/6)+0.01), 0.15))
+
+    if len(tasks)>3:
+        footnoteLabel = tk.Label(root, text="Lower-priority tasks are displayed when higher-priority tasks are complete.", font=('roboto', 12, 'normal'), foreground='#6200BE', borderwidth=0, background="#121212")
+        footnoteLabel.place(anchor="n", relx=0.5, rely=0.95)
 
 root = tk.Tk()
 root.title("PrioriTask")
