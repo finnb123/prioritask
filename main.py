@@ -2,6 +2,7 @@ import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
 import pickle
 import os
+from classes.task import Task
 
 def clearScreen():
     for widget in root.winfo_children():
