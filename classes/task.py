@@ -1,4 +1,4 @@
-from subtask import Subtask
+from classes.subtask import Subtask
 
 class Task:
     def __init__(self, name, taskID=0, description="", workload=0, priority=0, subtasks=None):
