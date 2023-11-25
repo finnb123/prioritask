@@ -1,9 +1,10 @@
 from classes.subtask import Subtask
 
 class Task:
-    def __init__(self, name, taskID=0, description="", workload=0, priority=0, subtasks=None):
+    def __init__(self, name, dueDate="", taskID=0, description="", workload=0, priority=0, subtasks=None):
         self._taskID = taskID  # Use a different name for the attribute
         self._name = name
+        self._dueDate = dueDate
         self._description = description
         self._workload = workload
         self._priority = priority
@@ -22,6 +23,8 @@ class Task:
     def priority(self): return self._priority
     @property
     def subtasks(self): return self._subtasks
+    @property
+    def dueDate(self): return self.dueDate
 
     # Setters
     @name.setter
@@ -32,6 +35,8 @@ class Task:
     def priority(self, newPrio): self._priority = newPrio
     @taskID.setter
     def taskID(self, newID): self._taskID = newID
+    @dueDate.setter
+    def dueDate(self, newDue): self._dueDate = newDue
 
     def addSubtask(self, newSub: Subtask):
         self._subtasks.append(newSub)

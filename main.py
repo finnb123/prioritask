@@ -1,8 +1,10 @@
 import tkinter as tk
+from tkinter import ttk
 from PIL import Image, ImageTk, ImageDraw
 import pickle
 import os
 from classes.task import Task
+import datetime
 
 def clearScreen():
     for widget in root.winfo_children():
@@ -16,37 +18,51 @@ def showAddTaskView():
     clearScreen()
     print("showing addtaskview")
     
-    addTaskView = tk.Frame(root)
-    addTaskView.pack(fill="both", expand=True)
+    addTaskLabel = tk.Label(root, text="Create a Task", font=('roboto', 24, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
+    addTaskLabel.place(anchor="n", relx=0.5, rely=0.05)
 
-    testLabel = tk.Label(addTaskView, text="Create a Task", font=('roboto', 12, 'bold'), foreground='#121212')
-    testLabel.pack()
+    titleLabel = tk.Label(root, text="Title", font=('roboto', 12, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
+    titleLabel.place(anchor="s", relx=0.5, rely=0.2)
+    nameField = tk.Entry(root, borderwidth=0, background="#4c4c4c", foreground="#FFFFFF", font=('roboto', 16, 'normal'))
+    nameField.place(anchor="n", relx=0.5, rely=0.2)
+    descriptionLabel = tk.Label(root, text="Description (Optional)", font=('roboto', 12, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
+    descriptionLabel.place(anchor="s", relx=0.5, rely=0.3)
+    descriptionField = tk.Entry(root, borderwidth=0, background="#4c4c4c", foreground="#FFFFFF", font=('roboto', 16, 'normal'))
+    descriptionField.place(anchor="n", relx=0.5, rely=0.3)
+    dateLabel = tk.Label(root, text="Due Date (YYYY-MM-DD)", font=('roboto', 12, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
+    dateLabel.place(anchor="s", relx=0.5, rely=0.4)
+    dateField = tk.Entry(root, borderwidth=0, background="#4c4c4c", foreground="#FFFFFF", font=('roboto', 16, 'normal'))
+    dateField.place(anchor="n", relx=0.5, rely=0.4)
+    currentDate = datetime.date.today()
+    dateField.insert(-1, currentDate)
 
-    nameField = tk.Entry(addTaskView)
-    nameField.pack()
-    descriptionField = tk.Entry(addTaskView)
-    descriptionField.pack()
-    workloadInt = tk.Scale(addTaskView, from_=0, to=200, orient='horizontal')
-    workloadInt.pack()
+    effortLabel = tk.Label(root, text="How big does this task feel?", font=('roboto', 12, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
+    effortLabel.place(anchor="s", relx=0.5, rely=0.5)
+    sliderStyle = ttk.Style()
+    sliderStyle.configure('TScale', background='#121212', slidercolor="#03DAC6")
+    workloadInt = ttk.Scale(root, from_=0, to=10, orient='horizontal', style='TScale')
+    workloadInt.place(anchor="n", relx=0.5, rely=0.5, relwidth=0.25)
 
     savePicOriginal = Image.open('img/tickB.png')
     desired_size = (50, 50)
-    resizedSave = savePicOriginal.resize(desired_size, Image.ANTIALIAS)
+    resizedSave = savePicOriginal.resize(desired_size, Image.Resampling.LANCZOS)
     saveButtonPic = ImageTk.PhotoImage(resizedSave)
-    saveButton = tk.Button(root, image=saveButtonPic, command=lambda: saveTask(nameField.get(), descriptionField.get(), workloadInt.get()), bd=0, bg="#121212", activebackground="#121212")
+    saveButton = tk.Button(root, image=saveButtonPic, command=lambda: 
+                           saveTask(nameField.get(), descriptionField.get(), workloadInt.get(), dateField.get()), 
+                           bd=0, bg="#121212", activebackground="#121212")
     saveButton.image = saveButtonPic
-    saveButton.pack()
+    saveButton.place(anchor="n", relx=0.75, rely=0.75)
 
 
     exitPicOriginal = Image.open('img/backArrowB.png')
     desired_size = (50, 50)
-    resizedexit = exitPicOriginal.resize(desired_size, Image.ANTIALIAS)
+    resizedexit = exitPicOriginal.resize(desired_size, Image.Resampling.LANCZOS)
     exitButtonPic = ImageTk.PhotoImage(resizedexit)
     exitButton = tk.Button(root, image=exitButtonPic, command=refresh, bd=0, bg="#121212", activebackground="#121212")
     exitButton.image = exitButtonPic
-    exitButton.pack()
+    exitButton.place(anchor="n", relx=0.25, rely=0.75)
 
-def saveTask(name, description, workload):
+def saveTask(name, description, workload, dueDate):
     global tasks
     print("Saving task")
     print(name)
@@ -59,6 +75,7 @@ def saveTask(name, description, workload):
     print(len(tasks))
     with open("tasks.file", "wb") as taskFile:
         pickle.dump(tasks, taskFile)
+    refresh()
 
 def loadMain():
     global tasks
@@ -69,19 +86,19 @@ def loadMain():
         tasks = []
     for task in tasks:
         taskNameLabel = tk.Label(root, text=task.name, font=('roboto', 12, 'bold'), foreground='#121212')
-        taskNameLabel.pack()
+        taskNameLabel.grid(column=2, row=tasks.index(task)+1)
     print(len(tasks))
 
     plusPicOriginal = Image.open('img/plusB.png')
 
     desired_size = (50, 50)
-    resized_image = plusPicOriginal.resize(desired_size, Image.ANTIALIAS)
+    resized_image = plusPicOriginal.resize(desired_size, Image.Resampling.LANCZOS)
 
     plusButtonPic = ImageTk.PhotoImage(resized_image)
 
     plusButton = tk.Button(root, image=plusButtonPic, command=showAddTaskView, bd=0, bg="#121212", activebackground="#121212")
     plusButton.image = plusButtonPic
-    plusButton.pack()
+    plusButton.grid(column=4, row=len(tasks)+1)
 
 root = tk.Tk()
 root.title("PrioriTask")
