@@ -201,7 +201,13 @@ def loadMain():
             tasks = pickle.load(taskFile)
     else:
         tasks = []
-    tasks = findPriority(tasks)
+    
+    remainingTasks = []
+    for task in tasks:
+        if not task.completed: remainingTasks.append(task)
+
+    tasks = findPriority(remainingTasks)
+    
     if len(tasks) >= 1:
         subTitleLabel = tk.Label(root, text="Here's what you should be working on now:", font=('roboto', 16, 'bold'), foreground='#6200BE', borderwidth=0, background="#121212")
         subTitleLabel.place(anchor="n", relx=0.5, rely=0.115)
