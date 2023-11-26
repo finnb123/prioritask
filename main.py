@@ -34,7 +34,36 @@ def draw_rounded_rectangle(canvas, x, y, width, height, corner_radius, task, ind
     canvas.create_text(width-corner_radius/2, height-corner_radius/2, text=f"Due {task.dueDate}", font='roboto 12 normal', fill="#FFFAF1", anchor="se")
     
 def showDetailedTaskView(task):
+    clearScreen()
     print(f"Clicked {task.name}")
+    taskLabel = tk.Label(root, text=task.name, font=('roboto', 24, 'bold'), foreground='#03DAC6', borderwidth=0, background="#121212")
+    taskLabel.place(anchor="n", relx=0.5, rely=0.05)
+    if task.description != "":
+        descriptText = task.description
+    else: descriptText = "No Description."
+    descriptLabel = tk.Label(root, text=descriptText, font=('roboto', 12, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
+    descriptLabel.place(anchor="n", relx=0.5, rely=0.15)
+
+    dueDateString = task.dueDate
+    dueDateElements = dueDateString.split("-")
+    dueDate = datetime.date(int(dueDateElements[0]), int(dueDateElements[1]), int(dueDateElements[2]))
+    today = datetime.date.today()
+    daysLeft = (dueDate-today).days
+    if daysLeft == 0: 
+        dueLabel = tk.Label(root, text="Due Today.", font=('roboto', 12, 'normal'), foreground='#CF6679', borderwidth=0, background="#121212")
+    elif daysLeft < 0: 
+        dueLabel = tk.Label(root, text="Overdue.", font=('roboto', 12, 'normal'), foreground='#CF6679', borderwidth=0, background="#121212")
+    else:
+        dueLabel = tk.Label(root, text=f"Due in {daysLeft} Days.", font=('roboto', 12, 'normal'), foreground='#CF6679', borderwidth=0, background="#121212")
+    dueLabel.place(anchor="n", relx=0.5, rely=0.115)
+
+    exitPicOriginal = Image.open('img/backArrowB.png')
+    desired_size = (50, 50)
+    resizedexit = exitPicOriginal.resize(desired_size, Image.Resampling.LANCZOS)
+    exitButtonPic = ImageTk.PhotoImage(resizedexit)
+    exitButton = tk.Button(root, image=exitButtonPic, command=refresh, bd=0, bg="#121212", activebackground="#121212")
+    exitButton.image = exitButtonPic
+    exitButton.place(anchor="n", relx=0.25, rely=0.75)
 
 def addSubtaskField(subtaskFields):
     newField = tk.Entry(root, borderwidth=0, background="#4c4c4c", foreground="#FFFFFF", font=('roboto', 16, 'normal'))
@@ -46,7 +75,7 @@ def showAddTaskView():
     print("showing addtaskview")
     subtaskFields = []
     
-    addTaskLabel = tk.Label(root, text="Create a Task", font=('roboto', 24, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
+    addTaskLabel = tk.Label(root, text="Create a Task", font=('roboto', 24, 'bold'), foreground='#03DAC6', borderwidth=0, background="#121212")
     addTaskLabel.place(anchor="n", relx=0.5, rely=0.05)
 
     titleLabel = tk.Label(root, text="Title", font=('roboto', 12, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
@@ -108,7 +137,8 @@ def saveTask(name, description, workload, dueDate, subtaskFields):
     print(name)
     subtasks = []
     for field in subtaskFields:
-        subtasks.append(field.get())
+        subTaskName = field.get()
+        if subTaskName != "": subtasks.append(subTaskName)
     if len(tasks) > 0:
         newID = tasks[-1].taskID + 1
     else:
