@@ -6,7 +6,17 @@ def findPriority(tasks:list[Task]):
 
     for task in tasks:
         workLoad = task.workload
-        workLeft = 1 #work left to be added
+        workLeft = 1 
+        if len(task.subtasks)>=1:
+            subTasksCompleted = 0
+            subTasksRemaining = 0
+            for subtask in task.subtasks:
+                if subtask.completed:
+                    subTasksCompleted+=1
+                else: subTasksRemaining+=1
+            workLeft = subTasksRemaining/subTasksCompleted
+            
+
         dueDateString = task.dueDate #due date to be added
         dueDateElements = dueDateString.split("-")
         dueDate = datetime.date(int(dueDateElements[0]), int(dueDateElements[1]), int(dueDateElements[2]))
