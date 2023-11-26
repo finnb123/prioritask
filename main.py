@@ -15,7 +15,7 @@ def refresh():
     clearScreen()
     loadMain()
 
-def draw_rounded_rectangle(canvas, x, y, width, height, corner_radius, **kwargs):
+def draw_rounded_rectangle(canvas, x, y, width, height, corner_radius, task, index, **kwargs):
     """
     Draw a rounded rectangle on the canvas.
     """
@@ -28,10 +28,23 @@ def draw_rounded_rectangle(canvas, x, y, width, height, corner_radius, **kwargs)
     # Create rectangle without outline
     canvas.create_rectangle(x + corner_radius, y, x + width - corner_radius, y + height, fill=kwargs['fill'], outline="")
     canvas.create_rectangle(x, y+corner_radius, x + width, y + height - corner_radius, fill=kwargs['fill'], outline="")
+
+    canvas.create_text(x+width-corner_radius, y+corner_radius, text=index, font='roboto 12 normal')
+    canvas.create_text(x+corner_radius/2, y+corner_radius/2, text=task.name, font='roboto 12 normal', fill="#FFFAF1", anchor="nw")
+    canvas.create_text(width-corner_radius/2, height-corner_radius/2, text=f"Due {task.dueDate}", font='roboto 12 normal', fill="#FFFAF1", anchor="se")
     
+def showDetailedTaskView(task):
+    print(f"Clicked {task.name}")
+
+def addSubtaskField(subtaskFields):
+    newField = tk.Entry(root, borderwidth=0, background="#4c4c4c", foreground="#FFFFFF", font=('roboto', 16, 'normal'))
+    newField.place(anchor='n', relx=0.5, rely=(0.6 + (len(subtaskFields)*0.05)))
+    subtaskFields.append(newField)
+
 def showAddTaskView():
     clearScreen()
     print("showing addtaskview")
+    subtaskFields = []
     
     addTaskLabel = tk.Label(root, text="Create a Task", font=('roboto', 24, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
     addTaskLabel.place(anchor="n", relx=0.5, rely=0.05)
@@ -57,13 +70,25 @@ def showAddTaskView():
     sliderStyle.configure('TScale', background='#121212', slidercolor="#03DAC6")
     workloadInt = ttk.Scale(root, from_=0, to=10, orient='horizontal', style='TScale')
     workloadInt.place(anchor="n", relx=0.5, rely=0.5, relwidth=0.25)
+    subtasksLabel = tk.Label(root, text="SubTasks", font=('roboto', 18, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
+    subtasksLabel.place(anchor='n', relx=0.5, rely=0.55)
+
+    addPicOriginal = Image.open('img/plusB.png')
+    desired_size = (20, 20)
+    resizedAdd = addPicOriginal.resize(desired_size, Image.Resampling.LANCZOS)
+    addButtonPic = ImageTk.PhotoImage(resizedAdd)
+    addButton = tk.Button(root, image=addButtonPic, command=lambda: 
+                           addSubtaskField(subtaskFields), 
+                           bd=0, bg="#121212", activebackground="#121212")
+    addButton.image = addButtonPic
+    addButton.place(anchor="n", relx=0.555, rely=0.56)
 
     savePicOriginal = Image.open('img/tickB.png')
     desired_size = (50, 50)
     resizedSave = savePicOriginal.resize(desired_size, Image.Resampling.LANCZOS)
     saveButtonPic = ImageTk.PhotoImage(resizedSave)
     saveButton = tk.Button(root, image=saveButtonPic, command=lambda: 
-                           saveTask(nameField.get(), descriptionField.get(), workloadInt.get(), dateField.get()), 
+                           saveTask(nameField.get(), descriptionField.get(), workloadInt.get(), dateField.get(), subtaskFields), 
                            bd=0, bg="#121212", activebackground="#121212")
     saveButton.image = saveButtonPic
     saveButton.place(anchor="n", relx=0.75, rely=0.75)
@@ -77,15 +102,18 @@ def showAddTaskView():
     exitButton.image = exitButtonPic
     exitButton.place(anchor="n", relx=0.25, rely=0.75)
 
-def saveTask(name, description, workload, dueDate):
+def saveTask(name, description, workload, dueDate, subtaskFields):
     global tasks
     print("Saving task")
     print(name)
+    subtasks = []
+    for field in subtaskFields:
+        subtasks.append(field.get())
     if len(tasks) > 0:
         newID = tasks[-1].taskID + 1
     else:
         newID = 1
-    newTask = Task(name=name, taskID=newID, description=description, workload=workload, dueDate=dueDate)
+    newTask = Task(name=name, taskID=newID, description=description, workload=workload, dueDate=dueDate, subtasks=subtasks)
     tasks.append(newTask)
     print(len(tasks))
     with open("tasks.file", "wb") as taskFile:
@@ -95,6 +123,7 @@ def saveTask(name, description, workload, dueDate):
 def loadMain():
     titleLabel = tk.Label(root, text="PrioriTask", font=('roboto', 44, 'bold'), foreground='#BB86FC', borderwidth=0, background="#121212")
     titleLabel.place(anchor="n", relx=0.5, rely=0.02)
+    plusButtonOffset = 0.15
     global tasks
     if os.path.exists("tasks.file"):
         with open("tasks.file", "rb") as taskFile:
@@ -105,13 +134,16 @@ def loadMain():
     if len(tasks) >= 1:
         subTitleLabel = tk.Label(root, text="Here's what you should be working on now:", font=('roboto', 16, 'bold'), foreground='#6200BE', borderwidth=0, background="#121212")
         subTitleLabel.place(anchor="n", relx=0.5, rely=0.115)
+        plusButtonOffset = (len(tasks)/6)+0.175
+
     for task in tasks:
         if tasks.index(task)<=3:
             if tasks.index(task)==0: color="#6200EE"
             else: color="#3700B3"
             canvas = tk.Canvas(root, width=300, height=100, bg="#121212", highlightthickness=0)
             canvas.place(anchor='n', relx = 0.5, rely = ((tasks.index(task)+1)/6)+0.01)
-            draw_rounded_rectangle(canvas, 0, 0, 300, 100, 20, fill=color)
+            draw_rounded_rectangle(canvas, 0, 0, 300, 100, 20, task, tasks.index(task)+1, fill=color)
+            canvas.bind('<Button>', func=lambda event, t=task: showDetailedTaskView(t))
     print(len(tasks))
 
     plusPicOriginal = Image.open('img/plusB.png')
@@ -120,9 +152,9 @@ def loadMain():
     plusButtonPic = ImageTk.PhotoImage(resized_image)
     plusButton = tk.Button(root, image=plusButtonPic, command=showAddTaskView, bd=0, bg="#121212", activebackground="#121212")
     plusButton.image = plusButtonPic
-    plusButton.place(anchor='n', relx=0.5, rely=max(((len(tasks)/6)+0.01), 0.15))
+    plusButton.place(anchor='n', relx=0.5, rely=min(plusButtonOffset, 0.85))
 
-    if len(tasks)>3:
+    if len(tasks)>4:
         footnoteLabel = tk.Label(root, text="Lower-priority tasks are displayed when higher-priority tasks are complete.", font=('roboto', 12, 'normal'), foreground='#6200BE', borderwidth=0, background="#121212")
         footnoteLabel.place(anchor="n", relx=0.5, rely=0.95)
 

@@ -1,14 +1,17 @@
 from classes.subtask import Subtask
 
 class Task:
-    def __init__(self, name, dueDate="", taskID=0, description="", workload=0, priority=0, subtasks=None):
+    def __init__(self, name, dueDate="", taskID=0, description="", workload=0, priority=0, subtasks:list[str]=None):
         self._taskID = taskID  # Use a different name for the attribute
         self._name = name
         self._dueDate = dueDate
         self._description = description
         self._workload = workload
         self._priority = priority
-        self._subtasks = subtasks if subtasks is not None else []
+        self._subtasks = []
+        if subtasks is not None:
+            for subtask in subtasks:
+                self._subtasks.append(Subtask(id=subtasks.index(subtask), name=subtask))
 
     # Getters
     @property

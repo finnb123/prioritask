@@ -14,10 +14,10 @@ def findPriority(tasks:list[Task]):
         daysLeft = (dueDate-today).days
 
         currentWorkLoad = workLoad * workLeft
-        task.priority = currentWorkLoad - daysLeft
+        task.priority = daysLeft - currentWorkLoad
         prioritizedList.append(task)
 
-    prioritizedList.sort(key = lambda x: x.priority, reverse = True)
+    prioritizedList.sort(key = lambda x: x.priority, reverse = False)
     return prioritizedList
 
 
