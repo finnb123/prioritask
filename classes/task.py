@@ -1,7 +1,7 @@
 from classes.subtask import Subtask
 
 class Task:
-    def __init__(self, name, dueDate="", taskID=0, description="", workload=0, priority=0, subtasks:list[str]=None):
+    def __init__(self, name, dueDate="", taskID=0, description="", workload=0, priority=0, subtasks:list[str]=None, completed=False):
         self._taskID = taskID  # Use a different name for the attribute
         self._name = name
         self._dueDate = dueDate
@@ -11,7 +11,8 @@ class Task:
         self._subtasks = []
         if subtasks is not None:
             for subtask in subtasks:
-                self._subtasks.append(Subtask(id=subtasks.index(subtask), name=subtask))
+                self._subtasks.append(Subtask(id=subtasks.index(subtask), name=subtask, parent=self))
+        self._completed = completed
 
     # Getters
     @property
@@ -28,6 +29,8 @@ class Task:
     def subtasks(self): return self._subtasks
     @property
     def dueDate(self): return self._dueDate
+    @property
+    def completed(self): return self._completed
 
     # Setters
     @name.setter
@@ -43,3 +46,5 @@ class Task:
 
     def addSubtask(self, newSub: Subtask):
         self._subtasks.append(newSub)
+
+    def markComplete(self): self._completed = True
