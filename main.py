@@ -251,6 +251,10 @@ def loadMain():
         footnoteLabel = tk.Label(root, text="Lower-priority tasks are displayed when higher-priority tasks are complete.", font=('roboto', 12, 'normal'), foreground='#6200BE', borderwidth=0, background="#121212")
         footnoteLabel.place(anchor="n", relx=0.5, rely=0.95)
 
+    for task in tasks:
+        if task.completed:
+            print(task.name)
+
 root = tk.Tk()
 root.title("PrioriTask")
 root.configure(bg="#121212")
