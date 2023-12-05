@@ -1,5 +1,6 @@
 from classes.subtask import Subtask
 
+
 class Task:
     def __init__(self, name, dueDate="", taskID=0, description="", workload=0, priority=0, subtasks:list[str]=None, completed=False):
         self._taskID = taskID  # Use a different name for the attribute

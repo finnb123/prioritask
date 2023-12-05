@@ -21,14 +21,15 @@ def refresh():
 def removeTask(task, view):
     '''Marks a task or subtask as complete
     task: Task or Subtask to mark
-    view: Current app view. 0 - Main, 1 - Detailed Task View'''
+    view: Current app view. 0 - Main, 
+                            1 - Detailed Task View
+                            2 - Past tasks view'''
     global tasks
     global completedTasks
     task.markComplete()
-    if task not in completedTasks:
+    if task not in completedTasks and type(task)==Task:
+        for subtask in task.subtasks: subtask.markComplete()
         completedTasks.append(task)
-    else:
-        completedTasks.remove(task)
     with open("tasks.file", "wb") as taskFile:
         pickle.dump(tasks, taskFile)
     with open("completed.file", "wb") as taskFile:
@@ -68,9 +69,10 @@ def draw_rounded_rectangle(canvas, x, y, width, height, corner_radius, task, ind
     ## Stop garbage collection of image
     if taskType==0:imageReferences[task.taskID] = minusButtonPic
     else:imageReferences[task.id] = minusButtonPic
-    button = tk.Button(canvas, image=minusButtonPic, command=lambda: removeTask(task, view), bd=0, bg=kwargs['fill'], activebackground=kwargs['fill'])
-    button.image = minusButtonPic
-    button.place(x=x+width-(corner_radius/2), y=height/2, anchor='e')
+    if not task.completed:
+        button = tk.Button(canvas, image=minusButtonPic, command=lambda: removeTask(task, view), bd=0, bg=kwargs['fill'], activebackground=kwargs['fill'])
+        button.image = minusButtonPic
+        button.place(x=x+width-(corner_radius/2), y=height/2, anchor='e')
     
 def showDetailedTaskView(task):
     '''Show a detailed view of task containing task information and subtasks'''
@@ -84,7 +86,9 @@ def showDetailedTaskView(task):
     descriptLabel = tk.Label(root, text=descriptText, font=('roboto', 12, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
     descriptLabel.place(anchor="n", relx=0.5, rely=0.15)
 
-    dueDate = task.dueDate
+    dueDateString = task.dueDate 
+    dueDateElements = dueDateString.split("-")
+    dueDate = datetime.date(int(dueDateElements[0]), int(dueDateElements[1]), int(dueDateElements[2]))
     today = datetime.date.today()
     daysLeft = (dueDate-today).days
     if daysLeft == 0: 
@@ -98,17 +102,28 @@ def showDetailedTaskView(task):
     dueLabel.place(anchor="n", relx=0.5, rely=0.115)
 
     # Find task's subtask not marked completed and display them
-    subtasksRemaining = []
-    for subtask in task.subtasks:
-        if not subtask.completed: subtasksRemaining.append(subtask)
-    if len(subtasksRemaining)>=1:
-        subtasksLabel = tk.Label(root, text="SubTasks", font=('roboto', 20, 'bold'), foreground='#03DAC6', borderwidth=0, background="#121212")
-        subtasksLabel.place(anchor="n", relx=0.5, rely=0.2)
-    for subtask in subtasksRemaining:
-        if not subtask.completed:
+    if not task.completed:
+        subtasksRemaining = []
+        for subtask in task.subtasks:
+            if not subtask.completed: subtasksRemaining.append(subtask)
+        if len(subtasksRemaining)>=1:
+            subtasksLabel = tk.Label(root, text="SubTasks", font=('roboto', 20, 'bold'), foreground='#03DAC6', borderwidth=0, background="#121212")
+            subtasksLabel.place(anchor="n", relx=0.5, rely=0.2)
+        for subtask in subtasksRemaining:
+            if not subtask.completed:
+                canvas = tk.Canvas(root, width=300, height=50, bg="#121212", highlightthickness=0)
+                canvas.place(anchor='n', relx = 0.5, rely = 0.25+(subtasksRemaining.index(subtask)*0.08))
+                draw_rounded_rectangle(canvas, 0, 0, 300, 50, 20, subtask, task.subtasks.index(subtask)+1, fill="#3700B3", taskType=1, view=1)
+    # Handle displaying of subtasks in completed task view (show all)
+    elif task.completed:
+        if len(task.subtasks)>=1:
+            subtasksLabel = tk.Label(root, text="SubTasks", font=('roboto', 20, 'bold'), foreground='#03DAC6', borderwidth=0, background="#121212")
+            subtasksLabel.place(anchor="n", relx=0.5, rely=0.2)
+        for subtask in task.subtasks:
             canvas = tk.Canvas(root, width=300, height=50, bg="#121212", highlightthickness=0)
-            canvas.place(anchor='n', relx = 0.5, rely = 0.25+(subtasksRemaining.index(subtask)*0.08))
-            draw_rounded_rectangle(canvas, 0, 0, 300, 50, 20, subtask, tasks.index(task)+1, fill="#3700B3", taskType=1, view=1)
+            canvas.place(anchor='n', relx = 0.5, rely = 0.25+(task.subtasks.index(subtask)*0.08))
+            draw_rounded_rectangle(canvas, 0, 0, 300, 50, 20, subtask, task.subtasks.index(subtask)+1, fill="#3700B3", taskType=1, view=1)
+
 
     # UI back button
     exitPicOriginal = Image.open('img/backArrowB.png')
@@ -196,7 +211,7 @@ def showAddTaskView():
     exitButton.image = exitButtonPic
     exitButton.place(anchor="n", relx=0.25, rely=0.75)
 
-def saveTask(name, description, workload, dueDate, subtaskFields):
+def saveTask(name:str, description:str="", workload:int=0, dueDate:str="", subtaskFields=[]):
     '''Create a new Task object with given information, add to list, and save to tasks.file'''
     global tasks
     # Dynamically create array of subtasks from subtaskFields
@@ -213,9 +228,9 @@ def saveTask(name, description, workload, dueDate, subtaskFields):
     
     
     #Checks if date is valid, if it is save it and go to main screen, else show error and remain on task screen
-    dueDateElements = dueDate.split("-")
     try:
-            dueDate = datetime.date(int(dueDateElements[0]), int(dueDateElements[1]), int(dueDateElements[2]))
+            dueDateElements = dueDate.split("-")
+            dueDateTest = datetime.date(int(dueDateElements[0]), int(dueDateElements[1]), int(dueDateElements[2]))
             newTask = Task(name=name, taskID=newID, description=description, workload=workload, dueDate=dueDate, subtasks=subtasks)
             tasks.append(newTask)
             # Save all tasks to storage
@@ -282,7 +297,6 @@ def loadMain():
     else:
         completedTasks = []
 
-
     # Sort through tasks and determine which are yet to be completed
     for task in tasks:
         if not task.completed: remainingTasks.append(task)
@@ -338,6 +352,7 @@ if __name__ == "__main__":
     root.title("PrioriTask")
     root.configure(bg="#121212")
     root.geometry("1280x720")
+    root.iconbitmap("img/plusB.ico")
 
     imageReferences = {}
     tasks = []
