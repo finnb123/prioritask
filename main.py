@@ -244,8 +244,8 @@ def saveTask(name:str, description:str="", workload:int=0, dueDate:str="", subta
 
 
 def pastTasks():
-    clearScreen()
     '''Load view of past tasks'''
+    clearScreen()
     titleLabel = tk.Label(root, text="Past Tasks",  font=('roboto', 44, 'bold'), foreground='#BB86FC', borderwidth=0, background="#121212")
     titleLabel.place(anchor="n", relx=0.5, rely=0.02)
     #Button to show current tasks
@@ -270,10 +270,7 @@ def pastTasks():
         canvas.place(anchor='n', relx = 0.5, rely = ((completedTasks.index(task)+1)/6)+0.01)
         draw_rounded_rectangle(canvas, 0, 0, 300, 100, 20, task, completedTasks.index(task)+1, fill=color, view=2)
         canvas.bind('<Button>', func=lambda event, t=task: showDetailedTaskView(t))
-
-
-    
-            
+ 
 
 def loadMain():
     '''Load the main view containing prioritised list of tasks'''
