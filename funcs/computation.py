@@ -18,10 +18,8 @@ def findPriority(tasks:list[Task]):
             
 
         dueDateString = task.dueDate #due date to be added
-        dueDateElements = dueDateString.split("-")
-        dueDate = datetime.date(int(dueDateElements[0]), int(dueDateElements[1]), int(dueDateElements[2]))
         today = datetime.date.today()
-        daysLeft = (dueDate-today).days
+        daysLeft = (dueDateString-today).days
 
         currentWorkLoad = workLoad * workLeft
         task.priority = daysLeft - currentWorkLoad

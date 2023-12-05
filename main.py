@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 from PIL import Image, ImageTk, ImageDraw
 import pickle
 import os
@@ -22,13 +23,22 @@ def removeTask(task, view):
     task: Task or Subtask to mark
     view: Current app view. 0 - Main, 1 - Detailed Task View'''
     global tasks
+    global completedTasks
     task.markComplete()
+    if task not in completedTasks:
+        completedTasks.append(task)
+    else:
+        completedTasks.remove(task)
     with open("tasks.file", "wb") as taskFile:
         pickle.dump(tasks, taskFile)
+    with open("completed.file", "wb") as taskFile:
+        pickle.dump(completedTasks, taskFile)
     if view == 0:
         refresh()
     if view == 1:
         showDetailedTaskView(task.parent)
+    if view == 2:
+        pastTasks()
 
 def draw_rounded_rectangle(canvas, x, y, width, height, corner_radius, task, index=0, taskType=0, view=0, **kwargs):
     '''
@@ -73,9 +83,8 @@ def showDetailedTaskView(task):
     else: descriptText = "No Description."
     descriptLabel = tk.Label(root, text=descriptText, font=('roboto', 12, 'normal'), foreground='#03DAC6', borderwidth=0, background="#121212")
     descriptLabel.place(anchor="n", relx=0.5, rely=0.15)
-    dueDateString = task.dueDate
-    dueDateElements = dueDateString.split("-")
-    dueDate = datetime.date(int(dueDateElements[0]), int(dueDateElements[1]), int(dueDateElements[2]))
+
+    dueDate = task.dueDate
     today = datetime.date.today()
     daysLeft = (dueDate-today).days
     if daysLeft == 0: 
@@ -106,7 +115,10 @@ def showDetailedTaskView(task):
     desired_size = (50, 50)
     resizedexit = exitPicOriginal.resize(desired_size, Image.Resampling.LANCZOS)
     exitButtonPic = ImageTk.PhotoImage(resizedexit)
-    exitButton = tk.Button(root, image=exitButtonPic, command=refresh, bd=0, bg="#121212", activebackground="#121212")
+    if task.completed == True:
+        exitButton = tk.Button(root, image=exitButtonPic, command= pastTasks, bd=0, bg="#121212", activebackground="#121212")
+    else:
+        exitButton = tk.Button(root, image=exitButtonPic, command= refresh, bd=0, bg="#121212", activebackground="#121212")
     exitButton.image = exitButtonPic
     exitButton.place(anchor="n", relx=0.25, rely=0.75)
     
@@ -198,12 +210,55 @@ def saveTask(name, description, workload, dueDate, subtaskFields):
     else:
         newID = 1
     # Create new Task object from supplied information and append to global list of tasks
-    newTask = Task(name=name, taskID=newID, description=description, workload=workload, dueDate=dueDate, subtasks=subtasks)
-    tasks.append(newTask)
-    # Save all tasks to storage
-    with open("tasks.file", "wb") as taskFile:
-        pickle.dump(tasks, taskFile)
+    
+    
+    #Checks if date is valid, if it is save it and go to main screen, else show error and remain on task screen
+    dueDateElements = dueDate.split("-")
+    try:
+            dueDate = datetime.date(int(dueDateElements[0]), int(dueDateElements[1]), int(dueDateElements[2]))
+            newTask = Task(name=name, taskID=newID, description=description, workload=workload, dueDate=dueDate, subtasks=subtasks)
+            tasks.append(newTask)
+            # Save all tasks to storage
+            with open("tasks.file", "wb") as taskFile:
+                pickle.dump(tasks, taskFile)
+    except:
+        messagebox.showerror('Date Error', 'Incorrect Date Format.')
+        return 1
+    
     refresh()
+
+
+def pastTasks():
+    clearScreen()
+    '''Load view of past tasks'''
+    titleLabel = tk.Label(root, text="Past Tasks",  font=('roboto', 44, 'bold'), foreground='#BB86FC', borderwidth=0, background="#121212")
+    titleLabel.place(anchor="n", relx=0.5, rely=0.02)
+    #Button to show current tasks
+    exitPicOriginal = Image.open('img/backArrowB.png')
+    desired_size = (50, 50)
+    resizedexit = exitPicOriginal.resize(desired_size, Image.Resampling.LANCZOS)
+    exitButtonPic = ImageTk.PhotoImage(resizedexit)
+    exitButton = tk.Button(root, image=exitButtonPic, command=refresh, bd=0, bg="#121212", activebackground="#121212")
+    exitButton.image = exitButtonPic
+    exitButton.place(anchor="n", relx=0.25, rely=0.75)
+
+    #Load past tasks from storage if any exist
+    global completedTasks
+
+    #Sort tasks in order of youngest to oldest
+    completedTasks.sort(key=lambda x: x.dueDate, reverse = True)
+
+    #Display list of tasks, only 5 currently
+    for task in completedTasks:
+        color="#018786"
+        canvas = tk.Canvas(root, width=300, height=100, bg="#121212", highlightthickness=0)
+        canvas.place(anchor='n', relx = 0.5, rely = ((completedTasks.index(task)+1)/6)+0.01)
+        draw_rounded_rectangle(canvas, 0, 0, 300, 100, 20, task, completedTasks.index(task)+1, fill=color, view=2)
+        canvas.bind('<Button>', func=lambda event, t=task: showDetailedTaskView(t))
+
+
+    
+            
 
 def loadMain():
     '''Load the main view containing prioritised list of tasks'''
@@ -211,6 +266,8 @@ def loadMain():
     titleLabel.place(anchor="n", relx=0.5, rely=0.02)
     plusButtonOffset = 0.15
     global tasks
+    global completedTasks
+
     # Load tasks from storage if any exist
     if os.path.exists("tasks.file"):
         with open("tasks.file", "rb") as taskFile:
@@ -218,6 +275,14 @@ def loadMain():
     else:
         tasks = []
     remainingTasks = []
+    #Load completed tasks from storage if any exist
+    if os.path.exists("completed.file"):
+        with open("completed.file", "rb") as taskFile:
+            completedTasks = pickle.load(taskFile)
+    else:
+        completedTasks = []
+
+
     # Sort through tasks and determine which are yet to be completed
     for task in tasks:
         if not task.completed: remainingTasks.append(task)
@@ -251,17 +316,31 @@ def loadMain():
         footnoteLabel = tk.Label(root, text="Lower-priority tasks are displayed when higher-priority tasks are complete.", font=('roboto', 12, 'normal'), foreground='#6200BE', borderwidth=0, background="#121212")
         footnoteLabel.place(anchor="n", relx=0.5, rely=0.95)
 
-    for task in tasks:
-        if task.completed:
-            print(task.name)
+    # Button to view Past Tasks
+    pastPicOriginal = Image.open('img/pastTasksB.png')
+    desired_size = (50, 50)
+    resizedPast = pastPicOriginal.resize(desired_size, Image.Resampling.LANCZOS)
+    pastButtonPic = ImageTk.PhotoImage(resizedPast)
+    pastButton = tk.Button(root, image=pastButtonPic, command=pastTasks, bd=0, bg="#121212", activebackground="#121212")
+    pastButton.image = pastButtonPic
+    pastButton.place(anchor="n", relx=0.25, rely=0.75)
+    # Refresh Button
+    refreshPicOriginal = Image.open('img/refreshB.png')
+    desired_size = (50, 50)
+    resizedRefresh = refreshPicOriginal.resize(desired_size, Image.Resampling.LANCZOS)
+    refreshButtonPic = ImageTk.PhotoImage(resizedRefresh)
+    refreshButton = tk.Button(root, image=refreshButtonPic, command=refresh, bd=0, bg="#121212", activebackground="#121212")
+    refreshButton.image = refreshButtonPic
+    refreshButton.place(anchor="n", relx=0.75, rely=0.75)
 
-root = tk.Tk()
-root.title("PrioriTask")
-root.configure(bg="#121212")
-root.geometry("1280x720")
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("PrioriTask")
+    root.configure(bg="#121212")
+    root.geometry("1280x720")
 
-imageReferences = {}
-tasks = []
-loadMain()
+    imageReferences = {}
+    tasks = []
+    loadMain()
 
-root.mainloop()
+    root.mainloop()
