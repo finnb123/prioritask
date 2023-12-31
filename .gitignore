@@ -1,0 +1,4 @@
+# Ignore locally saved files
+sql.db
+tasksFolder/
+__pycache__/
